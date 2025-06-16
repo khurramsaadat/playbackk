@@ -1,0 +1,3 @@
+node_modules
+.next 
+public/video-cutter/assets/ffmpeg-core.js 
