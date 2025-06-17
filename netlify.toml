@@ -1,6 +1,6 @@
 # Netlify configuration for static Next.js export
 [build]
-  command = "npm install --legacy-peer-deps && npm run build"
+  command = "pnpm install && pnpm run build"
   publish = ".next"
 
 [build.environment]
