@@ -1,4 +1,5 @@
 "use client";
+
 import { useRef, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
@@ -56,9 +57,6 @@ export default function Home() {
         loopingHandlerRef.current();
         loopingHandlerRef.current = null;
       }
-      // Always jump to A and play
-      video.currentTime = a;
-      video.play();
       const onTimeUpdate = () => {
         if (video.currentTime >= b) {
           video.currentTime = a;
@@ -192,17 +190,20 @@ export default function Home() {
       await ffmpeg.writeFile('input.mp4', await fetchFile(file));
       console.log('File written');
 
-      // Execute FFmpeg command with improved settings
+      // Execute FFmpeg command with single-pass encoding
       await ffmpeg.exec([
         '-ss', start.toString(),
         '-i', 'input.mp4',
         '-t', (end - start).toString(),
         '-c:v', 'libx264',  // Use H.264 codec
-        '-preset', 'ultrafast',  // Fastest encoding
-        '-crf', '23',  // Balance quality and size
-        '-c:a', 'aac',  // Use AAC for audio
-        '-b:a', '128k',  // Audio bitrate
+        '-preset', 'veryfast',  // Faster encoding
+        '-crf', '23',  // Constant Rate Factor - balance between quality and size
+        '-maxrate', '2500k',  // Maximum bitrate
+        '-bufsize', '5000k',  // Buffer size for rate control
+        '-profile:v', 'main',  // Main profile for better compatibility
         '-movflags', '+faststart',  // Enable fast start for web playback
+        '-c:a', 'aac',  // Use AAC for audio
+        '-b:a', '128k',  // Standard audio bitrate
         'output.mp4'
       ]);
       console.log('FFmpeg command executed');
@@ -288,7 +289,7 @@ export default function Home() {
           <div className="w-full flex flex-row items-center gap-2 mb-4">
             <label 
               htmlFor="file-upload" 
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-md cursor-pointer shadow-md transition-colors"
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-md cursor-pointer shadow-md transition-colors whitespace-nowrap"
             >
               Choose File
               <input
@@ -337,6 +338,8 @@ export default function Home() {
                 duration={duration}
                 setDuration={setDuration}
                 zoom={zoom}
+                isCutting={isCutting}
+                showToast={showToast}
               />
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500">
@@ -372,8 +375,14 @@ export default function Home() {
             <Button 
               size="default" 
               variant="destructive" 
-              onClick={() => setAbMarkers({ a: 0, b: duration })} 
-              disabled={!audioUrl || isPlaying} 
+              onClick={() => {
+                if (isCutting) {
+                  showToast('error', 'Cannot clear markers while cutting is in progress');
+                  return;
+                }
+                setAbMarkers({ a: 0, b: duration });
+              }} 
+              disabled={!audioUrl || isCutting} 
               aria-label="Clear A/B Markers"
               className="bg-red-400 hover:bg-red-500 text-white shadow-md"
             >
@@ -383,9 +392,9 @@ export default function Home() {
             <Button
               type="button"
               className={`bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md transition-all duration-200
-                ${(!audioUrl || abMarkers.a >= abMarkers.b || isCutting || isPlaying) ? 'opacity-50 cursor-not-allowed' : 'opacity-100'}
+                ${(!audioUrl || abMarkers.a >= abMarkers.b || isCutting) ? 'opacity-50 cursor-not-allowed' : 'opacity-100'}
               `}
-              disabled={!audioUrl || abMarkers.a >= abMarkers.b || isCutting || isPlaying}
+              disabled={!audioUrl || abMarkers.a >= abMarkers.b || isCutting}
               onClick={handleCutAndDownload}
               aria-label="Cut & Download"
             >

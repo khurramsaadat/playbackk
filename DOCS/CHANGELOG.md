@@ -199,3 +199,46 @@ palyback4/
 ├── tsconfig.tsbuildinfo
 └── video-cutter-microapp/
 ``` 
+
+## 2024-03-26
+### Added
+- Integrated stagewise toolbar for AI-powered editing capabilities
+  - Installed @stagewise/toolbar-next and @stagewise-plugins/react packages
+  - Added StagewiseToolbar component to root layout with development mode check
+  - Created .vscode/extensions.json with stagewise extension recommendation
+### Changed
+- Updated package.json with latest stagewise dependencies
+- Modified src/app/layout.tsx to properly handle stagewise toolbar in development mode
+### Fixed
+- Improved stagewise integration with proper SSR handling and development mode check 
+
+## [2024-01-09]
+
+### Changed
+- Optimized FFmpeg video encoding settings:
+  - Changed preset from 'medium' to 'veryfast' for faster processing
+  - Adjusted CRF to 23 for better quality balance
+  - Increased maxrate to 2500k and bufsize to 5000k
+  - Simplified profile to 'main' for better compatibility
+  - Standardized audio bitrate to 128k
+  - Removed unnecessary parameters for cleaner configuration
+  - Switched to single-pass encoding for faster processing
+
+### Fixed
+- Improved video processing speed by optimizing FFmpeg settings
+- Better quality-to-size ratio with adjusted CRF value
+- Enhanced compatibility across different devices with main profile
+
+### Technical Details
+- FFmpeg Command Changes:
+  ```diff
+  - '-preset', 'medium'
+  - '-crf', '28'
+  - '-profile:v', 'high'
+  - '-level', '4.1'
+  + '-preset', 'veryfast'
+  + '-crf', '23'
+  + '-maxrate', '2500k'
+  + '-bufsize', '5000k'
+  + '-profile:v', 'main'
+  ```

@@ -18,6 +18,8 @@ interface WaveSurferComponentProps {
   centerOnAB?: boolean;
   onCenterHandled?: () => void;
   zoom?: number;
+  isCutting?: boolean;
+  showToast?: (type: 'success' | 'error' | 'info', message: string) => void;
 }
 
 export type { WaveSurferComponentProps };
@@ -35,7 +37,9 @@ export default function WaveSurferComponent({
   onDuration,
   centerOnAB = false,
   onCenterHandled,
-  zoom = 1
+  zoom = 1,
+  isCutting = false,
+  showToast
 }: WaveSurferComponentProps) {
   const waveRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WaveSurfer | null>(null);
@@ -178,7 +182,13 @@ export default function WaveSurferComponent({
               ? "bg-green-600 text-white shadow-md" 
               : "bg-muted hover:bg-muted/80 text-foreground"} 
             hover:shadow-md`}
-          onClick={() => setAbMarkers({ ...abMarkers, a: videoRef.current?.currentTime || 0 })}
+          onClick={() => {
+            if (isCutting) {
+              showToast?.('error', 'Cannot set markers while cutting is in progress');
+              return;
+            }
+            setAbMarkers({ ...abMarkers, a: videoRef.current?.currentTime || 0 });
+          }}
         >
           Set A
         </button>
@@ -192,6 +202,10 @@ export default function WaveSurferComponent({
               : "bg-muted hover:bg-muted/80 text-foreground"} 
             hover:shadow-md`}
           onClick={() => {
+            if (isCutting) {
+              showToast?.('error', 'Cannot set markers while cutting is in progress');
+              return;
+            }
             setAbMarkers({ ...abMarkers, b: videoRef.current?.currentTime || 0 });
           }}
         >

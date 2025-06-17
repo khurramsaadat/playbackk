@@ -5,7 +5,7 @@ const nextConfig = {
   },
   // Ensure static files are served correctly
   assetPrefix: process.env.NODE_ENV === 'production' ? '/' : '',
-  // Disable server components since we're doing static export
+  // Configure headers for CORS and security
   async headers() {
     return [
       {
