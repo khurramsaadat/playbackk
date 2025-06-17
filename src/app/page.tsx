@@ -190,20 +190,23 @@ export default function Home() {
       await ffmpeg.writeFile('input.mp4', await fetchFile(file));
       console.log('File written');
 
-      // Execute FFmpeg command with single-pass encoding
+      // Execute FFmpeg command with optimized settings for speed and size
       await ffmpeg.exec([
         '-ss', start.toString(),
         '-i', 'input.mp4',
         '-t', (end - start).toString(),
-        '-c:v', 'libx264',  // Use H.264 codec
-        '-preset', 'veryfast',  // Faster encoding
-        '-crf', '23',  // Constant Rate Factor - balance between quality and size
-        '-maxrate', '2500k',  // Maximum bitrate
-        '-bufsize', '5000k',  // Buffer size for rate control
-        '-profile:v', 'main',  // Main profile for better compatibility
-        '-movflags', '+faststart',  // Enable fast start for web playback
-        '-c:a', 'aac',  // Use AAC for audio
-        '-b:a', '128k',  // Standard audio bitrate
+        '-c:v', 'libx264',
+        '-preset', 'ultrafast',  // Fastest encoding
+        '-crf', '28',  // Higher CRF = smaller file
+        '-tune', 'fastdecode,zerolatency',  // Optimize for fast decoding
+        '-profile:v', 'baseline',  // Most compatible profile
+        '-level', '3.0',
+        '-movflags', '+faststart',
+        '-c:a', 'aac',
+        '-b:a', '96k',  // Lower audio bitrate
+        '-ac', '2',
+        '-ar', '44100',  // Lower audio sample rate
+        '-f', 'mp4',  // Force MP4 format
         'output.mp4'
       ]);
       console.log('FFmpeg command executed');

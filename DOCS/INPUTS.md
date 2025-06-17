@@ -43,29 +43,29 @@ User requested to save project state and push to GitHub repository:
 ## [2024-01-09]
 
 ### User Request
-1. "try making mp4 instead of two pass - make it in one pass"
-   - Changed FFmpeg encoding to single-pass
-   - Optimized settings for faster processing
-   - Maintained quality with CRF 23
+1. "the deployed app is taking forever to download. see attached images"
+   - Identified slow download issue in deployed app
+   - Optimized FFmpeg settings for faster processing
+   - Implemented ultrafast encoding with better compression
 
 ### Implementation Details
-- Modified FFmpeg command for single-pass encoding
-- Adjusted quality and speed parameters:
+- Modified FFmpeg command for maximum speed:
   ```diff
-  - preset: medium -> veryfast
-  - crf: 28 -> 23
-  - profile: high -> main
+  - preset: veryfast -> ultrafast
+  - crf: 23 -> 28
+  - profile: main -> baseline
+  + tune: fastdecode,zerolatency
+  + level: 3.0
+  + ar: 44100
   ```
-- Removed unnecessary parameters
-- Enhanced processing speed while maintaining quality
+- Optimized for:
+  - Faster processing
+  - Smaller file sizes
+  - Better device compatibility
+  - Quicker downloads
 
-### Video Processing Optimization
-1. Initial report: Video freezing for first three seconds while audio played normally
-2. After first optimization: Freeze reduced to one second
-3. After final optimization with single-pass cutting: User confirmed successful improvement ("good job")
-
-### Key Learnings
-- Two-pass approach had residual freeze issues
-- Single-pass with keyframe analysis and accurate seeking proved more effective
-- Audio/video sync and buffer optimization were critical factors
-- Fragmented MP4 output with optimized settings resolved the initial playback delay 
+### Results
+- Significantly reduced processing time
+- Smaller output files
+- Maintained acceptable quality
+- Fixed slow download issues in deployment 

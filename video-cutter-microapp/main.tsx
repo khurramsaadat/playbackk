@@ -81,33 +81,24 @@ window.addEventListener('message', async (event) => {
       '-'
     );
 
-    // Single pass with precise seeking and optimized settings
+    // Single pass with optimized settings for speed and size
     await ffmpeg.run(
       '-accurate_seek',
       '-ss', start.toString(),
       '-i', 'input.mp4',
       '-t', (end - start).toString(),
       '-c:v', 'libx264',
-      '-preset', 'veryfast',
-      '-tune', 'zerolatency',
-      '-profile:v', 'high',
-      '-level', '4.1',
-      '-maxrate', '5000k',
-      '-bufsize', '10000k',
-      '-pix_fmt', 'yuv420p',
-      '-flags', '+global_header',
-      '-movflags', '+faststart+frag_keyframe+empty_moov+default_base_moof',
-      '-g', '1',
-      '-keyint_min', '1',
-      '-force_key_frames', 'expr:gte(t,0)',
-      '-vsync', '1',
-      '-async', '1',
-      '-af', 'aresample=async=1:min_hard_comp=0.100000',
+      '-preset', 'ultrafast',
+      '-crf', '28',
+      '-tune', 'fastdecode,zerolatency',
+      '-profile:v', 'baseline',
+      '-level', '3.0',
+      '-movflags', '+faststart',
       '-c:a', 'aac',
-      '-b:a', '192k',
+      '-b:a', '96k',
       '-ac', '2',
-      '-ar', '48000',
-      '-y',
+      '-ar', '44100',
+      '-f', 'mp4',
       'output.mp4'
     );
     

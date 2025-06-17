@@ -215,30 +215,32 @@ palyback4/
 ## [2024-01-09]
 
 ### Changed
-- Optimized FFmpeg video encoding settings:
-  - Changed preset from 'medium' to 'veryfast' for faster processing
-  - Adjusted CRF to 23 for better quality balance
-  - Increased maxrate to 2500k and bufsize to 5000k
-  - Simplified profile to 'main' for better compatibility
-  - Standardized audio bitrate to 128k
-  - Removed unnecessary parameters for cleaner configuration
-  - Switched to single-pass encoding for faster processing
+- Further optimized FFmpeg video encoding settings for faster processing:
+  - Changed preset from 'veryfast' to 'ultrafast' for maximum speed
+  - Added 'fastdecode' and 'zerolatency' tuning
+  - Increased CRF to 28 for better compression
+  - Reduced audio bitrate to 96k
+  - Lowered audio sample rate to 44.1kHz
+  - Using baseline profile for maximum compatibility
+  - Added level 3.0 for better device support
+  - Force MP4 format output
 
 ### Fixed
-- Improved video processing speed by optimizing FFmpeg settings
-- Better quality-to-size ratio with adjusted CRF value
-- Enhanced compatibility across different devices with main profile
+- Improved video processing speed significantly
+- Reduced output file size while maintaining acceptable quality
+- Enhanced compatibility across different devices
+- Fixed slow download issues in deployed app
 
 ### Technical Details
 - FFmpeg Command Changes:
   ```diff
-  - '-preset', 'medium'
-  - '-crf', '28'
-  - '-profile:v', 'high'
-  - '-level', '4.1'
-  + '-preset', 'veryfast'
-  + '-crf', '23'
-  + '-maxrate', '2500k'
-  + '-bufsize', '5000k'
-  + '-profile:v', 'main'
+  - '-preset', 'veryfast'
+  - '-crf', '23'
+  - '-profile:v', 'main'
+  + '-preset', 'ultrafast'
+  + '-crf', '28'
+  + '-tune', 'fastdecode,zerolatency'
+  + '-profile:v', 'baseline'
+  + '-level', '3.0'
+  + '-ar', '44100'
   ```
