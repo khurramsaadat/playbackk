@@ -69,3 +69,8 @@ User requested to save project state and push to GitHub repository:
 - Smaller output files
 - Maintained acceptable quality
 - Fixed slow download issues in deployment 
+
+## [2025-06-17 13:34:57 UTC]
+User reported: "choose file is not working"
+- Issue identified: File input was disabled during video playback
+- Solution implemented: Removed disabled state and improved file input handling 

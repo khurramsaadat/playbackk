@@ -10,6 +10,24 @@ import { Slider } from "@/components/ui/slider";
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { toBlobURL, fetchFile } from '@ffmpeg/util';
 
+// Add video-cutter iframe
+const VideoProcessorIframe = () => (
+  <iframe
+    id="video-cutter-iframe"
+    src="/video-cutter/index.html"
+    style={{ 
+      width: "100%", 
+      height: 0, 
+      border: 'none',
+      visibility: 'hidden',
+      position: 'absolute' 
+    }}
+    title="Video Cutter Micro-App"
+    allow="cross-origin-isolated"
+    sandbox="allow-scripts allow-forms allow-downloads allow-popups"
+  />
+);
+
 const WaveSurferComponent = dynamic(() =>
   import("../components/WaveSurferComponent") as Promise<{ default: ComponentType<WaveSurferComponentProps> }>
 , { ssr: false });
@@ -38,9 +56,18 @@ export default function Home() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Reset states when new file is selected
+      setIsPlaying(false);
+      setVideoUrl(null);
+      setAudioUrl(null);
+      setAbMarkers({ a: 0, b: 0 });
+      setDuration(0);
+      setZoom(1);
+      
+      // Create new URLs for video and audio
       const url = URL.createObjectURL(file);
       setVideoUrl(url);
-      setAudioUrl(url); // For now, use the same URL for both video and audio
+      setAudioUrl(url);
       setFileName(file.name);
     }
   };
@@ -49,45 +76,18 @@ export default function Home() {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    const { a, b } = abMarkers;
-    // Only loop if both markers are set and valid
-    if (a < b) {
-      // Remove any previous looping listeners
-      if (loopingHandlerRef.current) {
-        loopingHandlerRef.current();
-        loopingHandlerRef.current = null;
-      }
-      const onTimeUpdate = () => {
-        if (video.currentTime >= b) {
-          video.currentTime = a;
-          video.play();
-        }
-      };
-      const onPause = () => {
-        video.removeEventListener('timeupdate', onTimeUpdate);
-        video.removeEventListener('pause', onPause);
-      };
-      video.addEventListener('timeupdate', onTimeUpdate);
-      video.addEventListener('pause', onPause);
-      loopingHandlerRef.current = () => {
-        video.removeEventListener('timeupdate', onTimeUpdate);
-        video.removeEventListener('pause', onPause);
-      };
-    } else {
-      // If markers are not valid, remove looping listeners
-      if (loopingHandlerRef.current) {
-        loopingHandlerRef.current();
-        loopingHandlerRef.current = null;
-      }
-    }
-    // Cleanup on unmount or abMarkers change
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    const onEnded = () => setIsPlaying(false);
+    video.addEventListener('play', onPlay);
+    video.addEventListener('pause', onPause);
+    video.addEventListener('ended', onEnded);
     return () => {
-      if (loopingHandlerRef.current) {
-        loopingHandlerRef.current();
-        loopingHandlerRef.current = null;
-      }
+      video.removeEventListener('play', onPlay);
+      video.removeEventListener('pause', onPause);
+      video.removeEventListener('ended', onEnded);
     };
-  }, [abMarkers, videoRef, duration]);
+  }, [videoRef, audioUrl]);
 
   // Ensure isPlaying state always matches the actual video state
   useEffect(() => {
@@ -173,8 +173,8 @@ export default function Home() {
       
       // Load FFmpeg with proper core files
       await ffmpeg.load({
-        coreURL: await toBlobURL('https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js', 'text/javascript'),
-        wasmURL: await toBlobURL('https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm', 'application/wasm'),
+        coreURL: await toBlobURL('https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js', 'text/javascript'),
+        wasmURL: await toBlobURL('https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm', 'application/wasm'),
       });
       console.log('FFmpeg loaded');
 
@@ -270,20 +270,17 @@ export default function Home() {
     }
   };
 
+  // Cleanup URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (videoUrl) URL.revokeObjectURL(videoUrl);
+      if (audioUrl && audioUrl !== videoUrl) URL.revokeObjectURL(audioUrl);
+    };
+  }, [videoUrl, audioUrl]);
+
   return (
     <>
-      <iframe
-        id="video-cutter-iframe"
-        src="/video-cutter/index.html"
-        style={{ 
-          width: "100%", 
-          height: 0, 
-          border: 'none',
-          visibility: 'hidden',
-          position: 'absolute' 
-        }}
-        title="Video Cutter Micro-App"
-      />
+      <VideoProcessorIframe />
       <div className="min-h-screen flex flex-col items-center justify-start bg-background p-0 sm:p-2">
         <Card className="w-full max-w-md sm:max-w-2xl p-2 sm:p-4 flex flex-col gap-4 shadow-lg mt-0">
           <h1 className="text-2xl font-bold text-primary mb-2 text-center">Playback & Learn</h1>
@@ -292,7 +289,7 @@ export default function Home() {
           <div className="w-full flex flex-row items-center gap-2 mb-4">
             <label 
               htmlFor="file-upload" 
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-md cursor-pointer shadow-md transition-colors whitespace-nowrap"
+              className={`bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-2xl cursor-pointer shadow-md transition-colors whitespace-nowrap ${isPlaying ? 'opacity-50' : ''}`}
             >
               Choose File
               <input
@@ -301,10 +298,10 @@ export default function Home() {
                 accept="video/*,audio/*"
                 onChange={handleFileChange}
                 className="hidden"
-                disabled={isPlaying}
+                disabled={false}
               />
             </label>
-            <div className="text-sm text-muted-foreground truncate w-full bg-slate-100 p-2 rounded-md">
+            <div className="text-sm text-muted-foreground truncate w-full bg-slate-100 p-2 rounded-2xl">
               {fileName || 'No file selected'}
             </div>
           </div>

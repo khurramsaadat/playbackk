@@ -244,3 +244,56 @@ palyback4/
   + '-level', '3.0'
   + '-ar', '44100'
   ```
+
+## [2024-03-27]
+### Fixed
+- Fixed video cutting functionality in production:
+  - Updated FFmpeg core URL to use jsDelivr CDN consistently across all files
+  - Added proper Content-Security-Policy headers in netlify.toml to allow jsDelivr CDN
+  - Fixed CORS and SharedArrayBuffer support in video-cutter component
+  - Removed crossOrigin attribute from iframe to fix React warning
+  - Added sandbox permissions for video-cutter iframe
+
+## [2024-03-28]
+### Development Environment
+- Fixed CORS issues in development:
+  - Added CORS headers to Vite development server
+  - Updated Next.js development server CORS configuration
+  - Configured proper headers for video-cutter assets
+  - Added development-specific security headers
+
+### Security
+- Fixed CORS configuration for video-cutter assets:
+  - Added specific CORS headers for /video-cutter/assets/*
+  - Configured proper Access-Control-Allow-Origin headers
+  - Maintained security headers for SharedArrayBuffer support
+  - Updated Content-Security-Policy for asset access
+
+- Fixed iframe sandbox configuration:
+  - Removed potentially unsafe allow-same-origin permission
+  - Added allow-popups for download functionality
+  - Maintained necessary permissions for video processing
+  - Enhanced overall iframe security while preserving functionality
+
+### UI Improvements
+- Enhanced button aesthetics:
+  - Increased border radius from rounded-xl (12px) to rounded-2xl (16px)
+  - Applied consistent rounding to all button sizes (default, sm, lg, icon)
+  - Updated icon buttons to match the new rounded style
+  - Maintained consistent styling across all button variants
+
+## [2025-06-17]
+
+### Fixed
+- Fixed file input functionality in the video player component:
+  - Removed disabled state from file input that was preventing file selection during playback
+  - Added proper cleanup of video/audio URLs to prevent memory leaks
+  - Added onEnded event listener to properly reset isPlaying state
+  - Improved state reset when selecting new files
+  - Added visual feedback for file input button during playback instead of disabling it
+  - Enhanced error handling and state management for file selection
+
+### Changed
+- Updated file input UI to show opacity change instead of disabling during playback
+- Improved state management for video playback
+- Enhanced cleanup of resources when unmounting or changing files
